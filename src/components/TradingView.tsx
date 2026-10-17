@@ -59,8 +59,8 @@ export function TradingView({ active, opacity, t }: TradingViewProps) {
                 <a href={coin.twitter} target="_blank" rel="noreferrer">
                   twitter
                 </a>
-                <a href={`https://dexscreener.com/solana/${coin.ca}`} target="_blank" rel="noreferrer">
-                  chart
+                <a href={`https://pump.fun/coin/${coin.ca}`} target="_blank" rel="noreferrer">
+                  pump.fun
                 </a>
               </div>
             </div>
