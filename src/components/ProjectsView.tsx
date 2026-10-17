@@ -2,6 +2,34 @@ import { useEffect, useRef, useState } from 'react';
 import { loadGithubContributions, MONTH_NAMES, type ContribCell } from '@/lib/github';
 import type { Translation } from '@/lib/i18n';
 
+interface Project {
+  name: string;
+  url: string;
+  host: string;
+  kind: 'repo' | 'website' | 'extension';
+}
+
+const PROJECTS: Project[] = [
+  {
+    name: 'enderr.win',
+    url: 'https://github.com/EnderMythex/enderr.win',
+    host: 'github.com',
+    kind: 'repo',
+  },
+  {
+    name: 'Cyber-Cookie',
+    url: 'http://cybercookie.party/',
+    host: 'cybercookie.party',
+    kind: 'website',
+  },
+  {
+    name: 'HTML-CSS-Code-Viewer',
+    url: 'https://chromewebstore.google.com/detail/html-css-code-viewer/dgildcjamghbgngmnmegikihfcopnmlg',
+    host: 'chromewebstore.google.com',
+    kind: 'extension',
+  },
+];
+
 interface ProjectsViewProps {
   active: boolean;
   opacity: number;
@@ -41,20 +69,29 @@ export function ProjectsView({ active, opacity, t }: ProjectsViewProps) {
 
   return (
     <div id="projects-view" className={active ? 'active' : ''} style={{ opacity }}>
-      <div className="projects-arrows">
-        <a href="https://github.com/EnderMythex/enderr.win" target="_blank" rel="noreferrer">
-          enderr.win
-        </a>
-        <a href="http://cybercookie.party/" target="_blank" rel="noreferrer">
-          Cyber-Cookie
-        </a>
-        <a
-          href="https://chromewebstore.google.com/detail/html-css-code-viewer/dgildcjamghbgngmnmegikihfcopnmlg"
-          target="_blank"
-          rel="noreferrer"
-        >
-          HTML-CSS-Code-Viewer
-        </a>
+      <div className="projects-grid">
+        {PROJECTS.map((project, i) => (
+          <a
+            key={project.url}
+            className="project-card"
+            href={project.url}
+            target="_blank"
+            rel="noreferrer"
+            style={{ animationDelay: `${i * 90}ms` }}
+          >
+            <div className="project-card-top">
+              <span className="project-card-index">{String(i + 1).padStart(2, '0')}</span>
+              <span className="project-card-kind">{t.projects.kinds[project.kind]}</span>
+            </div>
+            <h3 className="project-card-name">{project.name}</h3>
+            <div className="project-card-bottom">
+              <span className="project-card-host">{project.host}</span>
+              <span className="project-card-arrow" aria-hidden="true">
+                ↗
+              </span>
+            </div>
+          </a>
+        ))}
       </div>
 
       <div className="github-card">

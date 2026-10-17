@@ -43,6 +43,10 @@ export interface GridOptions {
   tintStrength?: number;
   /** Seconds between ambient ripples when the cursor is idle. 0 disables. */
   idleRipples?: number;
+  /** Opacity of the tile fill (0 = fully transparent, 1 = solid). */
+  tileOpacity?: number;
+  /** Strength of the light outline drawn on lifted tile edges (0 to 1). */
+  edgeGlow?: number;
 }
 
 export interface GridElements {
@@ -81,6 +85,8 @@ const DEFAULTS: Required<GridOptions> = {
   tint: [0, 0.33, 1],
   tintStrength: 0.1,
   idleRipples: 0,
+  tileOpacity: 1,
+  edgeGlow: 0,
 };
 
 const MAX_TRAIL = 64;
@@ -174,6 +180,8 @@ uniform vec3 uTint;
 uniform float uTintStrength;
 uniform float uMaxX;
 uniform float uHasContent;
+uniform float uTileOpacity;
+uniform float uEdgeGlow;
 
 float tileLift (ivec2 idx) {
   idx = clamp(idx, ivec2(0), uGridTiles - 1);
@@ -310,8 +318,17 @@ void main () {
   }
 
   col = mix(col, uTint, t);
-  float aOut = alpha * mask;
-  outColor = vec4(col * aOut, aOut);
+  // Tiles carry the page itself when html-in-canvas is live, so only the
+  // fallback overlay tiles get faded.
+  float fillOpacity = uHasContent > 0.5 ? 1.0 : uTileOpacity;
+  float aOut = alpha * mask * fillOpacity;
+  vec3 premul = col * aOut;
+
+  float rim = (1.0 - smoothstep(0.0, 1.5, -edgeSd)) * mask
+    * clamp(abs(bestLift), 0.0, 1.0) * uEdgeGlow * (1.0 - uHasContent);
+  premul += vec3(rim);
+  aOut = clamp(aOut + rim, 0.0, 1.0);
+  outColor = vec4(premul, aOut);
 }`;
 
 export function supportsHtmlInCanvas(): boolean {
@@ -661,6 +678,14 @@ export function createGrid(
     );
     gl!.uniform1f(mainPass.uniforms.uTintStrength, config.tintStrength);
     gl!.uniform1f(mainPass.uniforms.uMaxX, contentMaxX);
+    gl!.uniform1f(
+      mainPass.uniforms.uTileOpacity,
+      Math.min(Math.max(config.tileOpacity, 0), 1),
+    );
+    gl!.uniform1f(
+      mainPass.uniforms.uEdgeGlow,
+      Math.min(Math.max(config.edgeGlow, 0), 1),
+    );
     gl!.bindFramebuffer(gl!.FRAMEBUFFER, null);
     gl!.viewport(0, 0, output.width, output.height);
     gl!.drawArrays(gl!.TRIANGLE_STRIP, 0, 4);
